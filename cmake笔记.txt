@@ -1,0 +1,35 @@
+# 配置
+cmake -B build
+# 构建
+cmake --build build
+# 列出所有生成的 .vcxproj 文件
+dir /b build\*.vcxproj
+# 回退目录: 
+cd ..
+# 进入目录: 
+cd .\build\
+# 列出当前目录文件和文件夹的命令:
+D:\myGame\build> ls
+#
+git rm --cached -r .vscode/
+git rm --cached "cmake笔记.txt"  
+# 确认文件已从索引移除
+git ls-files .vscode/          # 应无输出
+git ls-files "cmake笔记.txt"   # 应无输出
+# 确认 .gitignore 规则生效
+git check-ignore -v .vscode/launch.json   # 应显示匹配的忽略规则
+# 查看git提交历史
+git log
+# 每次提交到github
+git add .
+git commit -m"名字"
+git push
+# 下载github上的更新
+git pull
+# 回到任意一个版本
+git checkout Copy full SHA
+# 撤销最近1次提交
+git reset
+# 回到最新版本
+git reset --hard
+git checkout main(主分支的名字)

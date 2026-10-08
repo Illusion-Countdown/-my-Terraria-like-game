@@ -3,12 +3,14 @@ cmake_minimum_required(VERSION 3.16)
 set(CMAKE_CXX_STANDARD 17)
 
 #!！！！！！!
-#将此设置改为ON而非OFF以发布游戏！
+#将此设置改为 ON 而非 OFF 以发布游戏！
 #这基本上会将RESOURCES_PATH更改为本地路径
 #!！！！！！!
 #如果 Visual Studio 无法识别更改，请在修改后删除 out 文件夹
 set(PRODUCTION_BUILD OFF CACHE BOOL "Make this a production build" FORCE)
 
+# raylib
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build Raylib as static libraries" FORCE)
 
 project(mygame)
 
@@ -16,6 +18,9 @@ project(mygame)
 if(MSVC)
 	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 	add_compile_options(/arch:AVX2) #make sure SIMD optimizations take place
+	# 源码是 UTF-8 保存的，必须显式告诉 MSVC，否则在中文系统上会按 GBK(936) 解析
+	# 导致 C4819 警告，以及注释末尾字节吃掉换行、把下一行代码注释掉的诡异报错
+	add_compile_options(/utf-8)
 else()
 	add_compile_options(-mavx2 -mfma) # make sure SIMD optimizations take place, but on linux and other platforms
 endif()
@@ -74,8 +79,18 @@ elseif(APPLE OR UNIX) # macOS / Linux
 endif()
 
 
-target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/gamelayer")
+target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/platform")
+
+# 把 raylib 源码目录加入构建
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/third-party/raylib-6.0")
+# imgui
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/third-party/imgui-docking")
+# rllimgui
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/third-party/rlimgui")
 
 
+# link raylib  imgui
+target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE raylib_static imgui rlimgui)
 
 
