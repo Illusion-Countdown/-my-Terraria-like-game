@@ -16,8 +16,10 @@ struct GameData
 	Color c2 = {72, 61, 139, 255};
 	GameMap gameMap;
 	Camera2D camera;
+	int creativeSelectedBlock = Block::dirt;
 } gameData; // 别名
 AssetManager assetManager;
+bool showImgui = false;
 bool initGame()
 {
 	// 生成世界
@@ -31,6 +33,7 @@ bool initGame()
 #pragma endregion
 	return true;
 }
+
 bool updateGame()
 {
 	// deltaTime[增量时间]:避免帧率差别带来的速度影响
@@ -48,22 +51,32 @@ bool updateGame()
 	Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
 	int blockX = (int)floor(worldPos.x);
 	int blockY = (int)floor(worldPos.y);
-	// 破坏方块
-	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+
+	// 确保选择的方块存在
+	if (gameData.creativeSelectedBlock < 0) { gameData.creativeSelectedBlock = 0; }
+	if (gameData.creativeSelectedBlock >= Block::BLOCKS_COUNT) { gameData.creativeSelectedBlock = Block::BLOCKS_COUNT - 1; }
+
+	if (!showImgui) // 仅未显示Imgui时接受输入
 	{
-		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
-		if (b) { *b = {}; }
+		// 破坏方块
+		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+		{
+			auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+			if (b) { *b = {}; }
+		}
+		// 放置方块
+		if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+		{
+			auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
+			if (b) { b->type = gameData.creativeSelectedBlock; }
+		}
 	}
-	// 放置方块
-	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
-	{
-		auto b = gameData.gameMap.getBlockSafe(blockX, blockY);
-		if (b) { b->type = Block::ice; }
-	}
+
 #pragma endregion
 #pragma region draw
 
 	ClearBackground(gameData.c2);
+	if (IsKeyPressed(KEY_TAB)) { showImgui = !showImgui; }
 	BeginMode2D(gameData.camera);
 	// 渲染优化:只渲染屏幕上的部分   GetScreenToWorld2D(将屏幕的坐标转换为世界的坐标)
 	Vector2 topLeftView = GetScreenToWorld2D({0, 0}, gameData.camera);
@@ -111,25 +124,54 @@ bool updateGame()
 	// usually:同窗口部件不可以重名(但可以使用 名称+##num 实现 或者 PushID() + PopID())
 	// 不同窗口的部件可以重名
 	// 若窗口同名,则会合并为一个
-	ImGui::Begin("test");
-	ImGui::Text("Oh watchin'it burn,ain't got no hesition.");
-	if (ImGui::Button("Elemental Skill"))
-		std::cout << "Enigmatic Feint\n";
-	ImGui::SameLine(); // 在同一行显示
-	if (ImGui::Button("Elemental Burst"))
-		std::cout << "Magic Trick: Astonishing Shift\n";
-	ImGui::End();
-	// 控制camera窗口
-	ImGui::Begin("Game Control");
-	ImGui::SliderFloat("Camera zoom", &gameData.camera.zoom, 5, 150); // 滑块
-	ImGui::SliderFloat("Camera speed", &CAMERA_SPEED, 5, 60);
-	ImGui::End();
+	if (showImgui)
+	{
+		ImGui::Begin("test");
+		ImGui::Text("Oh watchin'it burn,ain't got no hesition.");
+		if (ImGui::Button("Elemental Skill"))
+			std::cout << "Enigmatic Feint\n";
+		ImGui::SameLine(); // 在同一行显示
+		if (ImGui::Button("Elemental Burst"))
+			std::cout << "Magic Trick: Astonishing Shift\n";
+		ImGui::End();
+		// 控制camera窗口
+		ImGui::Begin("Game Control");
+		ImGui::SliderFloat("Camera zoom", &gameData.camera.zoom, 5, 150); // 滑块
+		ImGui::SliderFloat("Camera speed", &CAMERA_SPEED, 5, 60);
+		ImGui::Separator();
+		for (int i = 0; i < Block::BLOCKS_COUNT; i++)
+		{
+			auto atlas = getTextureAtlas(i, 0, 32, 32);
+			atlas.x /= assetManager.textures.width;
+			atlas.width /= assetManager.textures.width;
+			atlas.y /= assetManager.textures.height;
+			atlas.height /= assetManager.textures.height;
+
+			ImGui::PushID(i);
+
+			ImTextureID tex = (ImTextureID)(intptr_t)assetManager.textures.id;
+			if (ImGui::ImageButton(tex,
+								   {35, 35},
+								   {atlas.x, atlas.y},
+								   {atlas.x + atlas.width, atlas.y + atlas.height}))
+				gameData.creativeSelectedBlock = i;
+
+			ImGui::PopID();
+
+			if (i % 10 != 0)
+				ImGui::SameLine(); // 保证每10个图标一行,同时air单独一行
+		}
+
+		ImGui::End();
+	}
+
 #pragma endregion
 
 #pragma endregion
 	DrawFPS(10, 10);
 	return true;
 }
+
 bool closeGame()
 {
 	return true;
