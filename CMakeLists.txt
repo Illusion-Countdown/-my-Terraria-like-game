@@ -88,9 +88,10 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/third-party/raylib-6.0")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/third-party/imgui-docking")
 # rllimgui
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/third-party/rlimgui")
-
+#FastNoiseSIMD
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/third-party/FastNoiseSIMD")
 
 # link raylib  imgui
-target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE raylib_static imgui rlimgui)
+target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE raylib_static imgui rlimgui fastNoiseSIMD)
 
 

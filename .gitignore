@@ -12,8 +12,7 @@ saves/
 
 *.json
 
-# 个人 VS Code / 编辑器配置,不上传到仓库
+
 .vscode/
 
-# 个人笔记
 cmake笔记.txt

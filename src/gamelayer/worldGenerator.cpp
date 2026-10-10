@@ -1,5 +1,6 @@
 #include "worldGenerator.h"
 #include "randomStuff.h"
+#include <FastNoiseSIMD.h>
 void generatorWorld(GameMap &gameMap, int seed)
 {
 	const int w = 700;
@@ -22,25 +23,25 @@ void generatorWorld(GameMap &gameMap, int seed)
 		if (keepDirectionTimeDirt <= 0)
 			keepDirectionTimeDirt = getRandomInt(rng, 5, 40);
 		directionDirt = getRandomInt(rng, -2, 2);
-		if (directionDirt = -2)
+		if (directionDirt == -2)
 		{
 			if (getRandomChance(rng, 0.2))
 				dirtHeight--;
 			if (getRandomChance(rng, 0.2))
 				dirtHeight--;
 		}
-		if (directionDirt = -1)
+		if (directionDirt == -1)
 		{
 			if (getRandomChance(rng, 0.2))
 				dirtHeight--;
 		}
 
-		if (directionDirt = 1)
+		if (directionDirt == 1)
 		{
 			if (getRandomChance(rng, 0.2))
 				dirtHeight++;
 		}
-		if (directionDirt = 2)
+		if (directionDirt == 2)
 		{
 			if (getRandomChance(rng, 0.2))
 				dirtHeight++;
@@ -52,25 +53,25 @@ void generatorWorld(GameMap &gameMap, int seed)
 		if (keepDirectionTimeStone <= 0)
 			keepDirectionTimeStone = getRandomInt(rng, 5, 40);
 		int directionStone = getRandomInt(rng, -2, 2);
-		if (directionDirt = -2)
+		if (directionDirt == -2)
 		{
 			if (getRandomChance(rng, 0.2))
 				stoneHeight--;
 			if (getRandomChance(rng, 0.2))
 				stoneHeight--;
 		}
-		if (directionStone = -1)
+		if (directionStone == -1)
 		{
 			if (getRandomChance(rng, 0.2))
 				stoneHeight--;
 		}
 
-		if (directionDirt = 1)
+		if (directionDirt == 1)
 		{
 			if (getRandomChance(rng, 0.2))
 				stoneHeight++;
 		}
-		if (directionStone = 2)
+		if (directionStone == 2)
 		{
 			if (getRandomChance(rng, 0.2))
 				stoneHeight++;
