@@ -25,7 +25,7 @@ bool initGame()
 	generatorWorld(gameData.gameMap);
 
 #pragma region camera
-	gameData.camera.target = {0, 0};
+	gameData.camera.target = {20, 120};
 	gameData.camera.rotation = 0.0f;
 	gameData.camera.zoom = 100.0f; // 缩放比例
 #pragma endregion

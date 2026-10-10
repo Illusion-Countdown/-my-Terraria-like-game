@@ -7,80 +7,44 @@ void generatorWorld(GameMap &gameMap, int seed)
 	const int h = 350;
 	gameMap.create(w, h);
 
-	int stoneHeight = 90;
-	int dirtHeight = 50;
-	std::ranlux24_base rng(seed);
-	int keepDirectionTimeDirt = getRandomInt(rng, 5, 40);
-	int directionDirt = getRandomInt(rng, -2, 2);
+	std::ranlux24_base rng(seed++);
 
-	int keepDirectionTimeStone = getRandomInt(rng, 5, 40);
-	int directionStone = getRandomInt(rng, -2, 2);
+	std::unique_ptr<FastNoiseSIMD> dirtNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
+	std::unique_ptr<FastNoiseSIMD> stoneNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
+
+	dirtNoiseGenerator->SetSeed(seed++);
+	stoneNoiseGenerator->SetSeed(seed++);
+
+	dirtNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+	dirtNoiseGenerator->SetFractalOctaves(1);
+	dirtNoiseGenerator->SetFrequency(0.02);
+
+	stoneNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+	stoneNoiseGenerator->SetFractalOctaves(4);
+	stoneNoiseGenerator->SetFrequency(0.01);
+
+	float *dirtNoise = FastNoiseSIMD::GetEmptySet(w);
+	float *stoneNoise = FastNoiseSIMD::GetEmptySet(w);
+
+	dirtNoiseGenerator->FillNoiseSet(dirtNoise, 0, 0, 0, w, 1, 1);
+	stoneNoiseGenerator->FillNoiseSet(stoneNoise, 0, 0, 0, w, 1, 1);
+	// 将数据从[-1,1]转换到[0,1]
+	for (int i = 0; i < w; i++)
+	{
+		dirtNoise[i] = (dirtNoise[i] + 1) / 2;
+		stoneNoise[i] = (stoneNoise[i] + 1) / 2;
+		stoneNoise[i] = std::pow(stoneNoise[i], 2);
+	}
+
+	int dirtOffsetStart = -5;
+	int dirtOffsetEnd = 35;
+	int stoneHeightStart = 80;
+	int stoneHeightEnd = 170;
 	for (int x = 0; x < w; x++)
 	{
-#pragma region random_terrain
-		// 土层
-		keepDirectionTimeDirt--;
-		if (keepDirectionTimeDirt <= 0)
-			keepDirectionTimeDirt = getRandomInt(rng, 5, 40);
-		directionDirt = getRandomInt(rng, -2, 2);
-		if (directionDirt == -2)
-		{
-			if (getRandomChance(rng, 0.2))
-				dirtHeight--;
-			if (getRandomChance(rng, 0.2))
-				dirtHeight--;
-		}
-		if (directionDirt == -1)
-		{
-			if (getRandomChance(rng, 0.2))
-				dirtHeight--;
-		}
-
-		if (directionDirt == 1)
-		{
-			if (getRandomChance(rng, 0.2))
-				dirtHeight++;
-		}
-		if (directionDirt == 2)
-		{
-			if (getRandomChance(rng, 0.2))
-				dirtHeight++;
-			if (getRandomChance(rng, 0.2))
-				dirtHeight++;
-		}
-		// 岩石层
-		keepDirectionTimeStone--;
-		if (keepDirectionTimeStone <= 0)
-			keepDirectionTimeStone = getRandomInt(rng, 5, 40);
-		int directionStone = getRandomInt(rng, -2, 2);
-		if (directionDirt == -2)
-		{
-			if (getRandomChance(rng, 0.2))
-				stoneHeight--;
-			if (getRandomChance(rng, 0.2))
-				stoneHeight--;
-		}
-		if (directionStone == -1)
-		{
-			if (getRandomChance(rng, 0.2))
-				stoneHeight--;
-		}
-
-		if (directionDirt == 1)
-		{
-			if (getRandomChance(rng, 0.2))
-				stoneHeight++;
-		}
-		if (directionStone == 2)
-		{
-			if (getRandomChance(rng, 0.2))
-				stoneHeight++;
-			if (getRandomChance(rng, 0.2))
-				stoneHeight++;
-		}
-		if (stoneHeight < 60) { stoneHeight = 60; }
-		if (stoneHeight > 120) { stoneHeight = 120; }
-#pragma endregion
+		int stoneHeight = stoneHeightStart + (stoneHeightEnd - stoneHeightStart) * stoneNoise[x];
+		int dirtHeight = dirtOffsetStart = (dirtOffsetEnd - dirtOffsetStart) * dirtNoise[x];
+		dirtHeight = stoneHeight - dirtHeight;
 		for (int y = 0; y < h; y++)
 		{
 			Block b;
@@ -97,4 +61,6 @@ void generatorWorld(GameMap &gameMap, int seed)
 			gameMap.getBlockUnsafe(x, y) = b;
 		}
 	}
+	FastNoiseSIMD::FreeNoiseSet(dirtNoise);
+	FastNoiseSIMD::FreeNoiseSet(stoneNoise);
 }

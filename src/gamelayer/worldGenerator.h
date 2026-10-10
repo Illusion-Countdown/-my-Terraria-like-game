@@ -1,4 +1,4 @@
 #pragma once
 #include "gameMap.h"
 
-void generatorWorld(GameMap &gameMap, int seed = 12);
+void generatorWorld(GameMap &gameMap, int seed = 1);
