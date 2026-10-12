@@ -4,6 +4,7 @@
 #include <rlImGui.h>
 #include <gameMain.h>
 #include "asserts.h"
+constexpr int FPS = 60;
 int main()
 {
 // 正式版本 禁用控制台输出
@@ -13,7 +14,7 @@ int main()
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	InitWindow(1600, 900, "如影流露的冷刃");
 	SetExitKey(KEY_NULL); // 禁止Esc关闭窗口
-	SetTargetFPS(240);	  // 限制帧率
+	SetTargetFPS(FPS);	  // 限制帧率
 
 	// clang-format off
 #pragma region imgui

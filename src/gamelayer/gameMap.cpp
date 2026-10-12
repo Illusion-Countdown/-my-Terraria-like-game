@@ -1,5 +1,6 @@
 #include "gameMap.h"
 #include <asserts.h>
+
 void GameMap::create(int w, int h)
 {
 	*this = {}; // 重置结构体

@@ -63,4 +63,10 @@ struct Block
 		BLOCKS_COUNT, // 最后一个,自动递增为方块总量的值
 	};
 	std::uint16_t type = 0; // type方块种类
+
+	// sanitize 无害化
+	void sanitize()
+	{
+		if (type >= BLOCKS_COUNT) { type = 0; }
+	}
 };
