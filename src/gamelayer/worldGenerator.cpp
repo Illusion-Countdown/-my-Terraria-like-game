@@ -4,6 +4,8 @@
 #include <algorithm> //std::clamp
 #include <cmath>	 //std::ceil
 #include <cstdlib>	 //std::abs
+#include <structure.h>
+#include <saveMap.h>
 void generatorWorld(GameMap &gameMap, int seed)
 {
 	const int w = 700;
@@ -52,6 +54,9 @@ void generatorWorld(GameMap &gameMap, int seed)
 	int desertStart = getRandomInt(rng, 100, w - 200);
 	int desertEnd = desertStart + getRandomInt(rng, 0, 100);
 	if (desertEnd >= w) { desertEnd = w - 100; }
+	// 树
+	Structure treeStructure;
+	loadBlockDataFromFile(treeStructure.mapData, treeStructure.w, treeStructure.h, RESOURCES_PATH "sturcture/tree2.bin");
 
 	for (int x = 0; x < w; x++)
 	{
@@ -188,5 +193,27 @@ void generatorWorld(GameMap &gameMap, int seed)
 				  getRandomInt(rng, 200, 500),
 				  2.5f);
 	}
+#pragma endregion
+#pragma region fill_tree
+	for (int x = 0; x < w; x++)
+		if (getRandomChance(rng, 0.04))
+			for (int y = 0; y < h; y++)
+			{
+				auto type = gameMap.getBlockUnsafe(x, y).type;
+				if (type == Block::air)
+					continue;
+				if (type == Block::grassBlock)
+				{
+					Vector2 spawnPos{(float)x, (float)y};
+					spawnPos.x -= treeStructure.w / 2;
+					spawnPos.y -= treeStructure.h;
+					treeStructure.pasteIntoMap(gameMap, spawnPos);
+					x += 3;
+					break;
+				}
+				else
+					break;
+			}
+
 #pragma endregion
 }

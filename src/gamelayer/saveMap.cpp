@@ -2,7 +2,40 @@
 #include <asserts.h>
 #include <filesystem>
 
-const int VERSION = 1;
+struct BlockSaveRepresentation01
+{
+	std::uint16_t type = 0;
+
+	Block toBlock()
+	{
+		Block b;
+		b.type = type;
+		b.durability = 1;
+		return b;
+	}
+};
+struct BlockSaveRepresentation02 // 新增方块耐久
+{
+	std::uint16_t type = 0;
+	std::uint8_t durability = 0;
+
+	Block toBlock()
+	{
+		Block b;
+		b.type = type;
+		b.durability = durability;
+		return b;
+	}
+};
+const int VERSION = 02;
+
+BlockSaveRepresentation02 toBlockRepresentation(Block b)
+{
+	BlockSaveRepresentation02 rez;
+	rez.type = b.type;
+	rez.durability = b.durability;
+	return rez;
+}
 
 bool saveBlockDataToFile(const std::vector<Block> blocks, int w, int h, const std::string &fileName)
 {
@@ -31,7 +64,14 @@ bool saveBlockDataToFile(const std::vector<Block> blocks, int w, int h, const st
 	f.write((const char *)&VERSION, sizeof(VERSION));
 	f.write((const char *)&w, sizeof(w)); // w,h,block.data()必须通过强转成const char *让f.write识别
 	f.write((const char *)&h, sizeof(h));
-	f.write((const char *)blocks.data(), sizeof(Block) * blocks.size()); // data()返回容器的首地址
+
+	// oldVersion: f.write((const char *)blocks.data(), sizeof(Block) * blocks.size());
+	//  data()返回容器的首地址
+	for (int i = 0; i < blocks.size(); i++)
+	{
+		auto b = toBlockRepresentation(blocks[i]);
+		f.write((const char *)&b, sizeof(b));
+	}
 
 	f.close();
 	return true;
@@ -47,6 +87,10 @@ bool loadBlockDataFromFile(std::vector<Block> &blocks, int &w, int &h, const std
 	// 先读到临时变量,全部检查通过后再写回
 	int loadedW = 0;
 	int loadedH = 0;
+	int readVersion = 00;
+	// 读取版本
+	f.read((char *)&readVersion, sizeof(readVersion));
+
 	// 读取长宽数据
 	f.read((char *)&loadedW, sizeof(loadedW));
 	f.read((char *)&loadedH, sizeof(loadedH));
@@ -54,14 +98,44 @@ bool loadBlockDataFromFile(std::vector<Block> &blocks, int &w, int &h, const std
 	if (!f) { return false; }
 	if (loadedW > 10000 || loadedH > 10000 || loadedW <= 0 || loadedH <= 0) { return false; }
 
-	// 读取方块的数据
-	size_t blockCount = (size_t)loadedW * (size_t)loadedH;
+	size_t blockCount = loadedH * loadedW;
 	std::vector<Block> loadedBlocks(blockCount);
-	f.read((char *)loadedBlocks.data(), sizeof(Block) * blockCount);
+	// 读取方块的数据
+	switch (readVersion)
+	{
+	case 01:
+	{
+		for (int i = 0; i < blockCount; i++)
+		{
+			BlockSaveRepresentation01 read;
+			f.read((char *)&read, sizeof(read));
 
-	// 检查数据流状态
-	if (!f) { return false; }
+			// 检查数据流状态
+			if (!f) { return false; }
 
+			loadedBlocks[i] = read.toBlock();
+		}
+		break;
+	}
+	case 02:
+		for (int i = 0; i < blockCount; i++)
+		{
+			BlockSaveRepresentation02 read;
+			f.read((char *)&read, sizeof(read));
+
+			// 检查数据流状态
+			if (!f) { return false; }
+
+			loadedBlocks[i] = read.toBlock();
+		}
+		break;
+	default:
+		return false;
+	}
+	// oldVersion:
+	//  size_t blockCount = (size_t)loadedW * (size_t)loadedH;
+	//  std::vector<Block> loadedBlocks(blockCount);
+	//  f.read((char *)loadedBlocks.data(), sizeof(Block) * blockCount);
 	// 若方块数据损毁,则修改为air
 	for (auto &b : loadedBlocks)
 		b.sanitize();
