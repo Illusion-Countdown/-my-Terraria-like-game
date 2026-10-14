@@ -4,7 +4,7 @@
 #include <rlImGui.h>
 #include <gameMain.h>
 #include "asserts.h"
-constexpr int FPS = 60;
+constexpr int FPS = 40;
 int main()
 {
 // 正式版本 禁用控制台输出
